@@ -1,4 +1,5 @@
-/* Copyright (c) 2012-2020, The Linux Foundation. All rights reserved.
+/* Copyright (c) 2012-2019, The Linux Foundation. All rights reserved.
+ * Copyright (C) 2019 XiaoMi, Inc.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -561,6 +562,7 @@ static int __read_queue(struct vidc_iface_q_info *qinfo, u8 *packet,
 		new_read_idx = write_idx;
 		rc = -ENODATA;
 	}
+
 
 	if (new_read_idx != write_idx)
 		queue->qhdr_rx_req = 0;
@@ -4711,4 +4713,3 @@ int venus_hfi_initialize(struct hfi_device *hdev, u32 device_id,
 err_venus_hfi_init:
 	return rc;
 }
-

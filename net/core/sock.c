@@ -1488,6 +1488,8 @@ struct sock *sk_clone_lock(const struct sock *sk, const gfp_t priority)
 		struct sk_filter *filter;
 
 		sock_copy(newsk, sk);
+		newsk->sk_prot_creator = sk->sk_prot;
+
 
 		newsk->sk_prot_creator = sk->sk_prot;
 
