@@ -1197,7 +1197,8 @@ static void wcd_correct_swch_plug(struct work_struct *work)
 	struct wcd_mbhc *mbhc;
 	struct snd_soc_codec *codec;
 	enum wcd_mbhc_plug_type plug_type = MBHC_PLUG_TYPE_INVALID;
-	unsigned long timeout;
+
+	int iRetryCount;
 	u16 hs_comp_res = 0, hphl_sch = 0, mic_sch = 0, btn_result = 0;
 	bool wrk_complete = false;
 	int pt_gnd_mic_swap_cnt = 0;

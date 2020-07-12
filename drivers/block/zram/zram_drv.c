@@ -1189,12 +1189,11 @@ static struct attribute_group zram_disk_attr_group = {
 	.attrs = zram_disk_attrs,
 };
 
-static const struct attribute_group *zram_disk_attr_groups[] = {
-	&zram_disk_attr_group,
-	NULL,
-};
-
-static int create_device(struct zram *zram, int device_id)
+/*
+ * Allocate and initialize new zram device. the function returns
+ * '>= 0' device_id upon success, and negative value otherwise.
+ */
+static int zram_add(void)
 {
 	struct zram *zram;
 	struct request_queue *queue;
@@ -1268,15 +1267,24 @@ static int create_device(struct zram *zram, int device_id)
 		zram->disk->queue->limits.discard_zeroes_data = 0;
 	queue_flag_set_unlocked(QUEUE_FLAG_DISCARD, zram->disk->queue);
 
-	disk_to_dev(zram->disk)->groups = zram_disk_attr_groups;
 	add_disk(zram->disk);
 
+	ret = sysfs_create_group(&disk_to_dev(zram->disk)->kobj,
+				&zram_disk_attr_group);
+	if (ret < 0) {
+		pr_err("Error creating sysfs group for device %d\n",
+				device_id);
+		goto out_free_disk;
+	}
 	strlcpy(zram->compressor, default_compressor, sizeof(zram->compressor));
 	zram->meta = NULL;
 
 	pr_info("Added device: %s\n", zram->disk->disk_name);
 	return device_id;
 
+out_free_disk:
+	del_gendisk(zram->disk);
+	put_disk(zram->disk);
 out_free_queue:
 	blk_cleanup_queue(queue);
 out_free_idr:
@@ -1352,8 +1360,12 @@ static ssize_t hot_remove_store(struct class *class,
 	struct zram *zram;
 	int ret, dev_id;
 
-	for (i = 0; i < nr; i++) {
-		zram = &zram_devices[i];
+	/* dev_id is gendisk->first_minor, which is `int' */
+	ret = kstrtoint(buf, 10, &dev_id);
+	if (ret)
+		return ret;
+	if (dev_id < 0)
+		return -EINVAL;
 
 	mutex_lock(&zram_index_mutex);
 
